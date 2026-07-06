@@ -4,6 +4,7 @@ using InvoiceManagement.Api.DTOs;
 using InvoiceManagement.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 
 namespace InvoiceManagement.Api.Controllers
 {
@@ -41,7 +42,11 @@ namespace InvoiceManagement.Api.Controllers
 
             if (vendor == null)
             {
-                return NotFound();
+                return NotFound(new ApiResponse<VendorResponse>
+                {
+                    Success = false,
+                    Message = "Vendor not found."
+                });
             }
 
             var vendorDto = _mapper.Map<VendorResponse>(vendor);
@@ -60,29 +65,31 @@ namespace InvoiceManagement.Api.Controllers
 
             _context.Vendors.Add(newVendor);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(Get), new { id = newVendor.Id }, new ApiResponse<Vendor>
+
+            var vendorResponse = _mapper.Map<VendorResponse>(newVendor);
+            return CreatedAtAction(nameof(Get), new { id = newVendor.Id }, new ApiResponse<VendorResponse>
             {
                 Success = true,
                 Message = "Vendor created successfully.",
-                Data = newVendor
+                Data = vendorResponse
             });
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, VendorRequest vendorDto)
+        public async Task<IActionResult> Update(int id, VendorRequest vendorRequest)
         {
             var vendor = await _context.Vendors.FindAsync(id);
 
             if (vendor == null)
             {
-                return BadRequest(new ApiResponse<Vendor>
+                return BadRequest(new ApiResponse
                 {
                     Success = false,
                     Message = $"Vendor with ID {id} not found."
                 });
             }
 
-            var updatedVendor = _mapper.Map(vendorDto, vendor);
+            var updatedVendor = _mapper.Map(vendorRequest, vendor);
             _context.Entry(updatedVendor).State = EntityState.Modified;
 
             try
@@ -93,7 +100,7 @@ namespace InvoiceManagement.Api.Controllers
             {
                 if (!_context.Vendors.Any(v => v.Id == id))
                 {
-                    return NotFound(new ApiResponse<Vendor>
+                    return NotFound(new ApiResponse
                     {
                         Success = false,
                         Message = $"Vendor with ID {id} not found."
@@ -105,11 +112,13 @@ namespace InvoiceManagement.Api.Controllers
                 }
             }
 
-            return Ok(new ApiResponse<Vendor>
+            var vendorResponse = _mapper.Map<VendorResponse>(updatedVendor);
+
+            return Ok(new ApiResponse<VendorResponse>
             {
                 Success = true,
                 Message = "Vendor updated successfully.",
-                Data = updatedVendor
+                Data = vendorResponse
             });
         }
 
@@ -119,13 +128,17 @@ namespace InvoiceManagement.Api.Controllers
             var vendor = await _context.Vendors.FindAsync(id);
             if (vendor == null)
             {
-                return NotFound();
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = $"Vendor with ID {id} not found."
+                });
             }
 
             _context.Vendors.Remove(vendor);
             await _context.SaveChangesAsync();
 
-            return Ok(new ApiResponse<Vendor>
+            return Ok(new ApiResponse
             {
                 Success = true,
                 Message = "Vendor deleted successfully."

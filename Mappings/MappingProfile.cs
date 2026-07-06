@@ -11,6 +11,10 @@ namespace InvoiceManagement.Api.Mappings
         {
             CreateMap<Vendor, VendorResponse>().ReverseMap();
             CreateMap<VendorRequest, Vendor>().ReverseMap();
+
+            CreateMap<User, UserResponse>().ReverseMap();
+            CreateMap<UserUpdateRequest, User>().ReverseMap();
+            CreateMap<AuthRegisterRequest, User>();
         }
 
     }
