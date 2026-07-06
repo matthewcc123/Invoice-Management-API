@@ -1,4 +1,283 @@
-# Invoice Management API
-ASP.NET Mini Project
+## 📌 Project Goal
 
 Developed a REST API for receiving vendor invoices, managing the review and approval workflow, generating barcodes, and tracking the physical invoice delivery process. Built with .NET 9, Entity Framework Core, AutoMapper, and Scalar for API documentation.
+
+---
+
+# ✅ Phase 1 - Project Setup
+
+## Project
+
+- [x]  Create ASP.NET Core Web API
+- [x]  Setup Git Repository
+- [x]  Install EF Core
+- [x]  Install SQLite Provider
+- [x]  Configure DbContext
+- [x]  Create Initial Migration
+- [x]  Update Database
+- [x]  Create appsettings.json configuration
+
+## Verify
+
+- [x]  API can run
+- [x]  Database created successfully
+
+---
+
+# ✅ Phase 2 - Vendor Module
+
+## Database
+
+- [x]  Create Vendor Entity
+- [x]  Migration
+
+## DTO
+
+- [x]  Create VendorRequestDto
+- [x]  Create VendorResponseDto
+
+## API
+
+- [x]  GET Vendors
+- [x]  GET Vendor By Id
+- [x]  POST Vendor
+- [x]  PUT Vendor
+- [x]  DELETE Vendor
+
+## Validation
+
+- [x]  Vendor Name required
+
+---
+
+# ✅ Phase 3 - Authentication (JWT)
+
+## User Entity
+
+- [x]  Create User Entity
+- [x]  Password Hash
+- [x]  User Role
+- [x]  VendorId (nullable)
+
+## JWT
+
+- [x]  Install JWT Package
+- [x]  Configure JWT Authentication
+- [x]  Configure Authorization
+
+## API
+
+- [x]  Login
+- [x]  Register (Optional)
+
+## Authorization
+
+- [x]  Admin Role
+- [x]  Vendor Role
+
+## Testing
+
+- [x]  Login Success
+- [x]  Access Protected Endpoint
+- [x]  Invalid Token
+- [x]  Role Authorization
+
+---
+
+# ✅ Phase 4 - Invoice Module
+
+## Database
+
+- [ ]  Create Invoice Entity
+- [ ]  Configure Vendor Relationship
+- [ ]  Migration
+
+## Status
+
+- [ ]  Pending
+- [ ]  Approved
+- [ ]  Rejected
+- [ ]  ReadyToSend
+- [ ]  Completed
+
+## API
+
+- [ ]  GET Invoices
+- [ ]  GET Invoice Detail
+- [ ]  POST Invoice
+- [ ]  PUT Invoice
+- [ ]  DELETE Invoice
+
+## Business Rules
+
+- [ ]  Default Status = Pending
+
+## Testing
+
+- [ ]  CRUD Invoice
+
+---
+
+# ✅ Phase 5 - Upload Invoice
+
+## Upload
+
+- [ ]  Create Upload Folder
+- [ ]  Configure Static Files
+- [ ]  Upload PDF
+- [ ]  Save File Path
+
+## Validation
+
+- [ ]  Only PDF
+- [ ]  Maximum File Size
+- [ ]  File Exists
+
+## API
+
+- [ ]  Upload Invoice Endpoint
+
+## Testing
+
+- [ ]  Upload Success
+- [ ]  Invalid File
+
+---
+
+# ✅ Phase 6 - Invoice Review
+
+## Database
+
+- [ ]  Create InvoiceReview Entity
+- [ ]  Migration
+
+## API
+
+- [ ]  Approve Invoice
+- [ ]  Reject Invoice
+
+## Business Rules
+
+- [ ]  Only Pending Invoice can be Reviewed
+- [ ]  Save Reviewer
+- [ ]  Save Review Date
+- [ ]  Save Remark
+
+## Testing
+
+- [ ]  Approve Flow
+- [ ]  Reject Flow
+
+---
+
+# ✅ Phase 7 - Barcode
+
+## Barcode
+
+- [ ]  Create Barcode Service
+- [ ]  Generate Barcode Number
+- [ ]  Save Barcode
+
+## API
+
+- [ ]  Generate Barcode Endpoint
+
+## Business Rules
+
+- [ ]  Only Approved Invoice
+- [ ]  Barcode Generated Once
+
+## Bonus
+
+- [ ]  Barcode Image (ZXing)
+
+---
+
+# ✅ Phase 8 - Send Invoice
+
+## API
+
+- [ ]  Mark Ready To Send
+- [ ]  Mark Completed
+
+## Business Rules
+
+- [ ]  Approved → ReadyToSend
+- [ ]  ReadyToSend → Completed
+- [ ]  Reject Invalid Status Transition
+
+---
+
+# ✅ Phase 9 - Search & Filter
+
+## Search
+
+- [ ]  Invoice Number
+- [ ]  Vendor
+- [ ]  Status
+- [ ]  Date Range
+
+## Pagination
+
+- [ ]  Page
+- [ ]  Page Size
+
+## Sorting
+
+- [ ]  Invoice Date
+- [ ]  Created Date
+
+---
+
+# ✅ Phase 10 - Dashboard
+
+## Statistics
+
+- [ ]  Pending Count
+- [ ]  Approved Count
+- [ ]  Rejected Count
+- [ ]  Completed Count
+
+## Optional
+
+- [ ]  Total Invoice Amount
+- [ ]  Monthly Summary
+
+---
+
+# ✅ Phase 11 - Polish
+
+## Validation
+
+- [ ]  FluentValidation (Optional)
+
+## Exception Handling
+
+- [ ]  Global Exception Middleware
+
+## Logging
+
+- [ ]  Request Logging
+
+## Seed Data
+
+- [ ]  Admin User
+- [ ]  Sample Vendors
+
+## Documentation
+
+- [ ]  README
+- [ ]  API Documentation
+
+---
+
+# 🚀 Bonus Features
+
+- [ ]  Refresh Token
+- [ ]  Role Based Authorization
+- [ ]  Audit Trail
+- [ ]  Soft Delete
+- [ ]  Export PDF
+- [ ]  Docker
+- [ ]  Unit Test
+- [ ]  Integration Test
