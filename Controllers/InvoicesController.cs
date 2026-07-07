@@ -44,7 +44,7 @@ namespace InvoiceManagement.Api.Controllers
         [Authorize]
         public async Task<IActionResult> GetInvoice(int id)
         {
-            var invoice = await _context.Invoices.Include(i => i.Attachments).FirstAsync(i => i.Id == id);
+            var invoice = await _context.Invoices.Include(i => i.Attachments).Include(i => i.Reviews).FirstAsync(i => i.Id == id);
             if (invoice == null)
             {
                 return NotFound(new ApiResponse<InvoiceResponse>
@@ -55,15 +55,13 @@ namespace InvoiceManagement.Api.Controllers
             }
 
             //Check if User have rights to access invoice for the given vendor
-            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var user = await _context.Users.FindAsync(userId);
-
-            if (user == null || (!User.IsInRole("Admin") && user.VendorId != invoice.VendorId))
+            var user = await GetCurrentUserAsync();
+            if (user == null || !HasVendorAccess(user, invoice.VendorId))
             {
                 return StatusCode(StatusCodes.Status403Forbidden, (new ApiResponse
                 {
                     Success = false,
-                    Message = "You do not have permission to access an invoice for this vendor."
+                    Message = "You are not authorized to view an invoice for this vendor."
                 }));
             }
 
@@ -102,17 +100,16 @@ namespace InvoiceManagement.Api.Controllers
             }
 
             //Check if User have rights to make invoice for the given vendor
-            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var user = await _context.Users.FindAsync(userId);
-
-            if (user == null || (!User.IsInRole("Admin") && user.VendorId != invoiceRequest.VendorId))
+            var user = await GetCurrentUserAsync();
+            if (user == null || !HasVendorAccess(user, invoiceRequest.VendorId))
             {
                 return StatusCode(StatusCodes.Status403Forbidden, (new ApiResponse
                 {
                     Success = false,
-                    Message = "You do not have permission to create an invoice for this vendor."
+                    Message = "You are not authorized to create an invoice for this vendor."
                 }));
             }
+
 
             var invoice = _mapper.Map<Invoice>(invoiceRequest);
 
@@ -148,28 +145,26 @@ namespace InvoiceManagement.Api.Controllers
             }
 
             //Check if User have rights to make invoice for the given vendor
-            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var user = await _context.Users.FindAsync(userId);
-
-            if (user == null || (!User.IsInRole("Admin") && user.VendorId != invoice.VendorId))
+            var user = await GetCurrentUserAsync();
+            if (user == null || !HasVendorAccess(user, invoice.VendorId))
             {
                 return StatusCode(StatusCodes.Status403Forbidden, (new ApiResponse
                 {
                     Success = false,
-                    Message = "You do not have permission to create an invoice for this vendor."
+                    Message = "You are not authorized to edit this invoice."
                 }));
             }
 
+
             //Add UpdateLog
             var now = DateTimeOffset.UtcNow;
-            var vendorId = User.FindFirst("vendorId")?.Value ?? "N/A";
 
             var updateLog = new UpdateLog
             {
                 EntityType = nameof(Invoice),
                 EntityId = invoice.Id,
                 DateTime = now,
-                Description = $"Invoice updated by {user.Email}"
+                Description = $"Invoice updated by {user.Username}"
             };
 
             //Apply
@@ -202,17 +197,16 @@ namespace InvoiceManagement.Api.Controllers
             }
 
             //Check if User have rights to delete invoice for the given vendor
-            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var user = await _context.Users.FindAsync(userId);
-
-            if (user == null || (!User.IsInRole("Admin") && user.VendorId != invoice.VendorId))
+            var user = await GetCurrentUserAsync();
+            if (user == null || !HasVendorAccess(user, invoice.VendorId))
             {
                 return StatusCode(StatusCodes.Status403Forbidden, (new ApiResponse
                 {
                     Success = false,
-                    Message = "You do not have permission to delete an invoice for this vendor."
+                    Message = "You are not authorized to delete this invoice."
                 }));
             }
+
 
             _context.Invoices.Remove(invoice);
             await _context.SaveChangesAsync();
@@ -224,7 +218,8 @@ namespace InvoiceManagement.Api.Controllers
             });
         }
 
-        [HttpPost("upload-attachment/{id}")]
+        [HttpPost("{id}/upload-attachment")]
+        [Authorize]
         public async Task<IActionResult> Upload(int id, IFormFile file)
         {
 
@@ -239,17 +234,16 @@ namespace InvoiceManagement.Api.Controllers
             }
 
             //Check if User have rights to delete attachment for the given invoice
-            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var user = await _context.Users.FindAsync(userId);
-
-            if (user == null || (!User.IsInRole("Admin") && user.VendorId != invoice.VendorId))
+            var user = await GetCurrentUserAsync();
+            if (user == null || !HasVendorAccess(user, invoice.VendorId))
             {
                 return StatusCode(StatusCodes.Status403Forbidden, (new ApiResponse
                 {
                     Success = false,
-                    Message = "You do not have permission to add an attachment for this invoice."
+                    Message = "You are not authorized to upload attachment to this invoice."
                 }));
             }
+
 
             if (file == null)
             {
@@ -319,6 +313,141 @@ namespace InvoiceManagement.Api.Controllers
             });
         }
 
+        [HttpPost("{id}/submit")]
+        [Authorize]
+        public async Task<IActionResult> SubmitToReview(int id)
+        {
+
+            var invoice = await _context.Invoices.FindAsync(id);
+
+            if (invoice == null)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invoice not found."
+                });
+            }
+
+            var user = await GetCurrentUserAsync();
+            if (user == null || !HasVendorAccess(user, invoice.VendorId))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, (new ApiResponse
+                {
+                    Success = false,
+                    Message = "You are not authorized to submit this invoice."
+                }));
+            }
+
+            bool canSubmit = invoice.Status == InvoiceStatus.Draft || invoice.Status == InvoiceStatus.Rejected;
+
+            if (!canSubmit)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Only draft or rejected invoices can be submited."
+                });
+            }
+
+
+            //Add UpdateLog
+            var now = DateTimeOffset.UtcNow;
+            var updateLog = new UpdateLog
+            {
+                EntityType = nameof(Invoice),
+                EntityId = invoice.Id,
+                DateTime = now,
+                Description = $"Invoice submited by {user.Username}"
+            };
+
+            //Apply
+            invoice.Status = InvoiceStatus.Pending;
+            _context.Entry(invoice).State = EntityState.Modified;
+            await _context.UpdateLogs.AddAsync(updateLog);
+            await _context.SaveChangesAsync();
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = $"Invoice submited successfully."
+            });
+        }
+
+        [HttpPost("{id}/review")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Approve(int id, InvoiceReviewRequest invoiceReviewRequest)
+        {
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            string username = User.FindFirst(ClaimTypes.Name)!.Value;
+
+            var invoice = await _context.Invoices.FindAsync(id);
+
+            if (invoice == null)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invoice not found."
+                });
+            }
+
+            if (invoice.Status != InvoiceStatus.Pending)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Only pending invoices can be reviewed."
+                });
+            }
+
+            //Create Review
+            var now = DateTimeOffset.UtcNow;
+
+            InvoiceReview review = new InvoiceReview
+            {
+                InvoiceId = invoice.Id,
+                Action = invoiceReviewRequest.Action,
+                Remarks = invoiceReviewRequest.Remarks,
+                ReviewDate = now,
+                ReviewedBy = username,
+                ReviewedByUserId = userId
+            };
+
+            //Add UpdateLog
+            var updateLog = new UpdateLog
+            {
+                EntityType = nameof(Invoice),
+                EntityId = invoice.Id,
+                DateTime = now,
+                Description = $"Invoice reviewed by {username}"
+            };
+
+            //Apply
+            invoice.Status = invoiceReviewRequest.Action == ReviewAction.Approved ? InvoiceStatus.Approved : InvoiceStatus.Rejected;
+            _context.Entry(invoice).State = EntityState.Modified;
+            await _context.InvoiceReviews.AddAsync(review);
+            await _context.UpdateLogs.AddAsync(updateLog);
+            await _context.SaveChangesAsync();
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = $"Invoice {invoiceReviewRequest.Action}."
+            });
+        }
+
+
+        private async Task<User?> GetCurrentUserAsync()
+        {
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            return await _context.Users.FindAsync(userId);
+        }
+
+        private bool HasVendorAccess(User user, int vendorId)
+        {
+            return User.IsInRole("Admin") || user.VendorId == vendorId;
+        }
 
     }
 }

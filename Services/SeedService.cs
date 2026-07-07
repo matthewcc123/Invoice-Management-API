@@ -33,13 +33,27 @@ namespace InvoiceManagement.Api.Services
                 PhoneNumber = "1234567890",
             });
 
-            await AddUser("admin@domain.com", "admin123", UserRole.Admin);
-            await AddUser("matthew@domain.com", "matthew123", UserRole.Vendor, 1);
+            await AddUser(new User
+            {
+                Username = "admin",
+                Email = "admin@domain.com",
+                Password = "admin123",
+                Role = UserRole.Admin
+            });
+
+            await AddUser(new User
+            {
+                Username = "matthew",
+                Email = "matthew@domain.com",
+                Password = "matthew123",
+                Role = UserRole.Vendor,
+                VendorId = 1
+            });
         }
 
-        private async Task AddUser(string email, string password, UserRole role, int? vendorId = null)
+        private async Task AddUser(User user)
         {
-            bool userExists = await _context.Users.AnyAsync(user => user.Email == email);
+            bool userExists = await _context.Users.AnyAsync(u=> u.Email == user.Email);
 
             if (userExists)
             {
@@ -47,18 +61,12 @@ namespace InvoiceManagement.Api.Services
                 return;
             }
 
-            var newUser = new User
-            {
-                Email = email,
-                Role = role,
-                Password = BCrypt.Net.BCrypt.HashPassword(password),
-                VendorId = vendorId,
-            };
+            user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
 
-            _context.Users.Add(newUser);
+            _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            Console.WriteLine($"{email} created successfully.");
+            Console.WriteLine($"{user.Username} created successfully.");
         }
 
         private async Task AddVendor(Vendor vendor)

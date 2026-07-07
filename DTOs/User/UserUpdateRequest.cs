@@ -5,6 +5,7 @@ namespace InvoiceManagement.Api.DTOs
 {
     public class UserUpdateRequest
     {
-        public int? VendorId { get; set; }
+        [Required]
+        public string? Username { get; set; }
     }
 }

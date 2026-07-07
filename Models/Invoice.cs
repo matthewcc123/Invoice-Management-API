@@ -27,8 +27,11 @@ namespace InvoiceManagement.Api.Models
         //File attachments
         public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
 
+        //Reviews
+        public ICollection<InvoiceReview> Reviews { get; set; } = new List<InvoiceReview>();
+
         //Status
-        public InvoiceStatus Status { get; set; } = InvoiceStatus.ToReview;
+        public InvoiceStatus Status { get; set; } = InvoiceStatus.Draft;
 
     }
 }

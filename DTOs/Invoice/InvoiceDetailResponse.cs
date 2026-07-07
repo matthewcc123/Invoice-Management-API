@@ -26,7 +26,10 @@ namespace InvoiceManagement.Api.DTOs
         //File attachments
         public ICollection<AttachmentResponse>? Attachments { get; set; }
 
+        //Reviews
+        public ICollection<InvoiceReviewResponse>? Reviews { get; set; }
+
         //Status
-        public InvoiceStatus Status { get; set; } = InvoiceStatus.ToReview;
+        public InvoiceStatus Status { get; set; } = InvoiceStatus.Pending;
     }
 }

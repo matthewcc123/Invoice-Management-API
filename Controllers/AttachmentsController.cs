@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using InvoiceManagement.Api.Data;
 using InvoiceManagement.Api.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +23,7 @@ namespace InvoiceManagement.Api.Controllers
 
 
         [HttpGet("preview/{name}")]
+        [Authorize]
         public async Task<IActionResult> Preview(string name)
         {
             var attachment = await _context.Attachments.Include(a => a.Invoice).FirstOrDefaultAsync(a => a.FileName == name);
@@ -68,6 +70,7 @@ namespace InvoiceManagement.Api.Controllers
         }
 
         [HttpGet("download/{name}")]
+        [Authorize]
         public async Task<IActionResult> Download(string name)
         {
             var attachment = await _context.Attachments.Include(a => a.Invoice).FirstOrDefaultAsync(a => a.FileName == name);
@@ -114,6 +117,7 @@ namespace InvoiceManagement.Api.Controllers
         }
 
         [HttpDelete("delete/{name}")]
+        [Authorize]
         public async Task<IActionResult> Delete(string name)
         {
             var attachment = await _context.Attachments.Include(a => a.Invoice).FirstOrDefaultAsync(a => a.FileName == name);

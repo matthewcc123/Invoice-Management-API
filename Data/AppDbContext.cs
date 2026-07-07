@@ -13,6 +13,7 @@ namespace InvoiceManagement.Api.Data
         public DbSet<Invoice> Invoices => Set<Invoice>();
         public DbSet<Attachment> Attachments => Set<Attachment>();
         public DbSet<UpdateLog> UpdateLogs => Set<UpdateLog>();
+        public DbSet<InvoiceReview> InvoiceReviews => Set<InvoiceReview>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -36,6 +37,13 @@ namespace InvoiceManagement.Api.Data
             modelBuilder.Entity<Attachment>()
                 .HasOne(e => e.Invoice)
                 .WithMany(i => i.Attachments)
+                .HasForeignKey(e => e.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            //Invoice One To Many Reviews
+            modelBuilder.Entity<InvoiceReview>()
+                .HasOne(e => e.Invoice)
+                .WithMany(r => r.Reviews)
                 .HasForeignKey(e => e.InvoiceId)
                 .OnDelete(DeleteBehavior.Cascade);
         }

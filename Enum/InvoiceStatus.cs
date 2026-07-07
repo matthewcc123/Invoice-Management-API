@@ -2,7 +2,8 @@
 {
     public enum InvoiceStatus
     {
-        ToReview,
+        Draft,
+        Pending,
         Approved,
         Rejected,
         ToReceive,

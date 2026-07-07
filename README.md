@@ -148,25 +148,25 @@ Developed a REST API for receiving vendor invoices, managing the review and appr
 
 ## Database
 
-- [ ]  Create InvoiceReview Entity
-- [ ]  Migration
+- [x]  Create InvoiceReview Entity
+- [x]  Migration
 
 ## API
 
-- [ ]  Approve Invoice
-- [ ]  Reject Invoice
+- [x]  Approve Invoice
+- [x]  Reject Invoice
 
 ## Business Rules
 
-- [ ]  Only Pending Invoice can be Reviewed
-- [ ]  Save Reviewer
-- [ ]  Save Review Date
-- [ ]  Save Remark
+- [x]  Only Pending Invoice can be Reviewed
+- [x]  Save Reviewer
+- [x]  Save Review Date
+- [x]  Save Remark
 
 ## Testing
 
-- [ ]  Approve Flow
-- [ ]  Reject Flow
+- [x]  Approve Flow
+- [x]  Reject Flow
 
 ---
 

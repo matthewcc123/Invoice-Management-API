@@ -23,6 +23,6 @@ namespace InvoiceManagement.Api.DTOs
         public decimal TotalAmount { get; set; }
 
         //Status
-        public InvoiceStatus Status { get; set; } = InvoiceStatus.ToReview;
+        public InvoiceStatus Status { get; set; } = InvoiceStatus.Pending;
     }
 }

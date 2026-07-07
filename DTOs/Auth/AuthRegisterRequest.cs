@@ -6,6 +6,8 @@ namespace InvoiceManagement.Api.DTOs
     public class AuthRegisterRequest
     {
         [Required]
+        public string Username { get; set; } = string.Empty;
+        [Required]
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
         [Required]

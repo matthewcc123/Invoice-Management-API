@@ -27,6 +27,8 @@ namespace InvoiceManagement.Api.Mappings
             CreateMap<InvoiceUpdateRequest, Invoice>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<Attachment, AttachmentResponse>().ReverseMap();
+
+            CreateMap<InvoiceReview, InvoiceReviewResponse>().ReverseMap();
         }
 
     }

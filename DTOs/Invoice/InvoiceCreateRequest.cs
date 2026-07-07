@@ -10,6 +10,7 @@ namespace InvoiceManagement.Api.DTOs
         public string InvoiceNumber { get; set; } = string.Empty;
         public DateTime InvoiceDate { get; set; }
         public DateTime DueDate { get; set; }
+
         [Required]
         public int VendorId { get; set; }
 

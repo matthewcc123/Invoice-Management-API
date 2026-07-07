@@ -3,6 +3,7 @@ using System;
 using InvoiceManagement.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InvoiceManagement.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260707184018_Username")]
+    partial class Username
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.17");
@@ -82,39 +85,6 @@ namespace InvoiceManagement.Api.Migrations
                     b.HasIndex("VendorId");
 
                     b.ToTable("Invoices");
-                });
-
-            modelBuilder.Entity("InvoiceManagement.Api.Models.InvoiceReview", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Action")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("InvoiceId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Remarks")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTimeOffset>("ReviewDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ReviewedBy")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ReviewedByUserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InvoiceId");
-
-                    b.ToTable("InvoiceReviews");
                 });
 
             modelBuilder.Entity("InvoiceManagement.Api.Models.UpdateLog", b =>
@@ -224,17 +194,6 @@ namespace InvoiceManagement.Api.Migrations
                     b.Navigation("Vendor");
                 });
 
-            modelBuilder.Entity("InvoiceManagement.Api.Models.InvoiceReview", b =>
-                {
-                    b.HasOne("InvoiceManagement.Api.Models.Invoice", "Invoice")
-                        .WithMany("Reviews")
-                        .HasForeignKey("InvoiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Invoice");
-                });
-
             modelBuilder.Entity("InvoiceManagement.Api.Models.UpdateLog", b =>
                 {
                     b.HasOne("InvoiceManagement.Api.Models.Invoice", null)
@@ -255,8 +214,6 @@ namespace InvoiceManagement.Api.Migrations
             modelBuilder.Entity("InvoiceManagement.Api.Models.Invoice", b =>
                 {
                     b.Navigation("Attachments");
-
-                    b.Navigation("Reviews");
 
                     b.Navigation("UpdateLogs");
                 });
