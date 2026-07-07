@@ -12,7 +12,8 @@ namespace InvoiceManagement.Api.Models
         public string? Email { get; set; }
 
         //EF
-        public ICollection<User>? Users { get; set; }
+        public ICollection<User> Users { get; set; } = new List<User>();
+        public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
 
     }
 }

@@ -25,10 +25,13 @@ namespace InvoiceManagement.Api.Controllers
             _mapper = mapper;
         }
 
+
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> GetAll()
         {
+            // This will filter only the users that belong to the same vendor as the authenticated user, unless the user is an Admin.
+
             var users = await _context.Users.ToListAsync();
             var usersDto = _mapper.Map<List<UserResponse>>(users);
 
@@ -44,6 +47,16 @@ namespace InvoiceManagement.Api.Controllers
         [Authorize]
         public async Task<IActionResult> Get(int id)
         {
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            if (userId != id && !User.IsInRole("Admin"))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new ApiResponse
+                {
+                    Success = false,
+                    Message = $"You're not authorized to access this user."
+                });
+            }
+
             var user = await _context.Users.FindAsync(id);
 
             if (user == null)
@@ -68,6 +81,16 @@ namespace InvoiceManagement.Api.Controllers
         [Authorize]
         public async Task<IActionResult> Update(int id, UserUpdateRequest userUpdateRequest)
         {
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            if (userId != id && !User.IsInRole("Admin"))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new ApiResponse
+                {
+                    Success = false,
+                    Message = $"You're not authorized to update this user."
+                });
+            }
+
             var user = await _context.Users.FindAsync(id);
 
             if (user == null)
@@ -111,10 +134,20 @@ namespace InvoiceManagement.Api.Controllers
             });
         }
 
-        [HttpPost("delete/{id}")]
+        [HttpDelete("delete/{id}")]
         [Authorize]
         public async Task<IActionResult> Delete(int id, UserDeleteRequest userDeleteRequest)
         {
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            if (userId != id && !User.IsInRole("Admin"))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new ApiResponse
+                {
+                    Success = false,
+                    Message = $"You're not authorized to delete this user."
+                });
+            }
+
             var user = await _context.Users.FindAsync(id);
 
             if (user == null)

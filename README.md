@@ -88,33 +88,33 @@ Developed a REST API for receiving vendor invoices, managing the review and appr
 
 ## Database
 
-- [ ]  Create Invoice Entity
-- [ ]  Configure Vendor Relationship
-- [ ]  Migration
+- [x]  Create Invoice Entity
+- [x]  Configure Vendor Relationship
+- [x]  Migration
 
 ## Status
 
-- [ ]  Pending
-- [ ]  Approved
-- [ ]  Rejected
-- [ ]  ReadyToSend
-- [ ]  Completed
+- [x]  Pending
+- [x]  Approved
+- [x]  Rejected
+- [x]  ReadyToSend
+- [x]  Completed
 
 ## API
 
-- [ ]  GET Invoices
-- [ ]  GET Invoice Detail
-- [ ]  POST Invoice
-- [ ]  PUT Invoice
-- [ ]  DELETE Invoice
+- [x]  GET Invoices
+- [x]  GET Invoice Detail
+- [x]  POST Invoice
+- [x]  PUT Invoice
+- [x]  DELETE Invoice
 
 ## Business Rules
 
-- [ ]  Default Status = Pending
+- [x]  Default Status = Pending
 
 ## Testing
 
-- [ ]  CRUD Invoice
+- [x]  CRUD Invoice
 
 ---
 

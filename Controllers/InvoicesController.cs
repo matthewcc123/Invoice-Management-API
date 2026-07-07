@@ -1,0 +1,227 @@
+﻿using AutoMapper;
+using InvoiceManagement.Api.Data;
+using InvoiceManagement.Api.DTOs;
+using InvoiceManagement.Api.Enum;
+using InvoiceManagement.Api.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+
+namespace InvoiceManagement.Api.Controllers
+{
+    [ApiController]
+    [Route("[controller]")]
+    public class InvoicesController : ControllerBase
+    {
+        private readonly AppDbContext _context;
+        private readonly IMapper _mapper;
+        public InvoicesController(AppDbContext context, IMapper mapper)
+        {
+            _context = context;
+            _mapper = mapper;
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetInvoices()
+        {
+            // This will filter only the users that belong to the same vendor as the authenticated user, unless the user is an Admin.
+
+            var invoices = await _context.Invoices.ToListAsync();
+            var invoicesResponse = _mapper.Map<List<InvoiceResponse>>(invoices);
+
+            return Ok(new ApiResponse<List<InvoiceResponse>>
+            {
+                Success = true,
+                Message = "Invoices retrieved successfully.",
+                Data = invoicesResponse
+            });
+        }
+
+        [HttpGet("{id}")]
+        [Authorize]
+        public async Task<IActionResult> GetInvoice(int id)
+        {
+            var invoice = await _context.Invoices.FindAsync(id);
+            if (invoice == null)
+            {
+                return NotFound(new ApiResponse<InvoiceResponse>
+                {
+                    Success = false,
+                    Message = "Invoice not found."
+                });
+            }
+
+            //Check if User have rights to access invoice for the given vendor
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null || (!User.IsInRole("Admin") && user.VendorId != invoice.VendorId))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, (new ApiResponse
+                {
+                    Success = false,
+                    Message = "You do not have permission to access an invoice for this vendor."
+                }));
+            }
+
+            var logs = await _context.UpdateLogs
+                .Where(log => log.EntityType == nameof(Invoice) && log.EntityId == invoice.Id)
+                .OrderBy(log => log.Id)
+                .ToListAsync();
+
+            invoice.UpdateLogs = logs;
+
+            var invoiceResponse = _mapper.Map<InvoiceDetailResponse>(invoice);
+            return Ok(new ApiResponse<InvoiceDetailResponse>
+            {
+                Success = true,
+                Message = "Invoice retrieved successfully.",
+                Data = invoiceResponse
+            });
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> CreateInvoice(InvoiceCreateRequest invoiceRequest)
+        {
+            //Check Vendor Exists
+            if (invoiceRequest.VendorId != 0)
+            {
+                var vendorExists = await _context.Vendors.AnyAsync(v => v.Id == invoiceRequest.VendorId);
+                if (!vendorExists)
+                {
+                    return NotFound(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Vendor not found."
+                    });
+                }
+            }
+
+            //Check if User have rights to make invoice for the given vendor
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null || (!User.IsInRole("Admin") && user.VendorId != invoiceRequest.VendorId))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, (new ApiResponse
+                {
+                    Success = false,
+                    Message = "You do not have permission to create an invoice for this vendor."
+                }));
+            }
+
+            var invoice = _mapper.Map<Invoice>(invoiceRequest);
+
+            //Set CreatedAt to current UTC time
+            invoice.CreatedAt = DateTimeOffset.UtcNow;
+
+            await _context.Invoices.AddAsync(invoice);
+            await _context.SaveChangesAsync();
+
+            var createdInvoiceResponse = _mapper.Map<InvoiceResponse>(invoice);
+            return CreatedAtAction(nameof(GetInvoice), new { id = createdInvoiceResponse.Id }, new ApiResponse<InvoiceResponse>
+            {
+                Success = true,
+                Message = "Invoice created successfully.",
+                Data = createdInvoiceResponse
+            });
+
+        }
+
+        [HttpPut("{id}")]
+        [Authorize]
+        public async Task<IActionResult> UpdateInvoice(int id, InvoiceUpdateRequest invoiceRequest)
+        {
+            var invoice = await _context.Invoices.FindAsync(id);
+
+            if (invoice == null)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invoice not found."
+                });
+            }
+
+            //Check if User have rights to make invoice for the given vendor
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null || (!User.IsInRole("Admin") && user.VendorId != invoice.VendorId))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, (new ApiResponse
+                {
+                    Success = false,
+                    Message = "You do not have permission to create an invoice for this vendor."
+                }));
+            }
+
+            //Add UpdateLog
+            var now = DateTimeOffset.UtcNow;
+            var vendorId = User.FindFirst("vendorId")?.Value ?? "N/A";
+
+            var updateLog = new UpdateLog
+            {
+                EntityType = nameof(Invoice),
+                EntityId = invoice.Id,
+                DateTime = now,
+                Description = $"Invoice updated by {user.Email}"
+            };
+
+            //Apply
+            _mapper.Map(invoiceRequest, invoice);
+            _context.Entry(invoice).State = EntityState.Modified;
+            await _context.UpdateLogs.AddAsync(updateLog);
+            await _context.SaveChangesAsync();
+
+            var updatedInvoiceResponse = _mapper.Map<InvoiceResponse>(invoice);
+            return Ok(new ApiResponse<InvoiceResponse>
+            {
+                Success = true,
+                Message = "Invoice updated successfully.",
+                Data = updatedInvoiceResponse
+            });
+        }
+
+        [HttpDelete("delete/{id}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteInvoice(int id)
+        {
+            var invoice = await _context.Invoices.FindAsync(id);
+            if (invoice == null)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invoice not found."
+                });
+            }
+
+            //Check if User have rights to delete invoice for the given vendor
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null || (!User.IsInRole("Admin") && user.VendorId != invoice.VendorId))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, (new ApiResponse
+                {
+                    Success = false,
+                    Message = "You do not have permission to delete an invoice for this vendor."
+                }));
+            }
+
+            _context.Invoices.Remove(invoice);
+            await _context.SaveChangesAsync();
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = "Invoice deleted successfully."
+            });
+        }
+
+    }
+}

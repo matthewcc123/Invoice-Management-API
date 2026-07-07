@@ -2,6 +2,7 @@
 using InvoiceManagement.Api.Data;
 using InvoiceManagement.Api.DTOs;
 using InvoiceManagement.Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
@@ -23,6 +24,7 @@ namespace InvoiceManagement.Api.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAll()
         {
             var vendors = await _context.Vendors.ToListAsync();
@@ -36,6 +38,7 @@ namespace InvoiceManagement.Api.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Get(int id)
         {
             var vendor = await _context.Vendors.FindAsync(id);
@@ -59,6 +62,7 @@ namespace InvoiceManagement.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(VendorRequest vendor)
         {
             var newVendor = _mapper.Map<Vendor>(vendor);
@@ -76,6 +80,7 @@ namespace InvoiceManagement.Api.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, VendorRequest vendorRequest)
         {
             var vendor = await _context.Vendors.FindAsync(id);
@@ -122,7 +127,8 @@ namespace InvoiceManagement.Api.Controllers
             });
         }
 
-        [HttpPost("delete/{id}")]
+        [HttpDelete("delete/{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             var vendor = await _context.Vendors.FindAsync(id);

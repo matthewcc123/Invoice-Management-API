@@ -14,7 +14,14 @@ namespace InvoiceManagement.Api.Mappings
 
             CreateMap<User, UserResponse>().ReverseMap();
             CreateMap<UserUpdateRequest, User>().ReverseMap();
-            CreateMap<AuthRegisterRequest, User>();
+            CreateMap<AuthRegisterRequest, User>().ReverseMap();
+            CreateMap<AuthUpdatePasswordRequest, User>().ReverseMap();
+            CreateMap<AuthUpdateRoleRequest, User>().ReverseMap();
+
+            CreateMap<Invoice, InvoiceResponse>().ReverseMap();
+            CreateMap<Invoice, InvoiceDetailResponse>().ReverseMap();
+            CreateMap<InvoiceCreateRequest, Invoice>().ReverseMap();
+            CreateMap<InvoiceUpdateRequest, Invoice>().ReverseMap();
         }
 
     }
