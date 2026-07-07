@@ -1,19 +1,12 @@
-﻿
-using InvoiceManagement.Api.Enum;
-
-namespace InvoiceManagement.Api.Models
+﻿namespace InvoiceManagement.Api.DTOs
 {
-    public class Attachment
+    public class AttachmentResponse
     {
 
         public int Id { get; set; }
         public string FileName { get; set; } = string.Empty;
         public string OriginalName { get; set; } = string.Empty;
         public DateTimeOffset UploadedAt { get; set; } = DateTimeOffset.UtcNow;
-
-        //Invoice Relationship
-        public int InvoiceId { get; set; }
-        public Invoice? Invoice { get; set; }
 
     }
 }

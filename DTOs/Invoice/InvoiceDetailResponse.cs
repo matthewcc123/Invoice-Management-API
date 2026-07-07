@@ -24,7 +24,7 @@ namespace InvoiceManagement.Api.DTOs
         public decimal TotalAmount { get; set; }
 
         //File attachments
-        public ICollection<Attachment>? Attachments { get; set; }
+        public ICollection<AttachmentResponse>? Attachments { get; set; }
 
         //Status
         public InvoiceStatus Status { get; set; } = InvoiceStatus.ToReview;

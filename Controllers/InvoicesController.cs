@@ -16,6 +16,7 @@ namespace InvoiceManagement.Api.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
+        private readonly long MaxFileSize = 5 * 1024;
         public InvoicesController(AppDbContext context, IMapper mapper)
         {
             _context = context;
@@ -43,7 +44,7 @@ namespace InvoiceManagement.Api.Controllers
         [Authorize]
         public async Task<IActionResult> GetInvoice(int id)
         {
-            var invoice = await _context.Invoices.FindAsync(id);
+            var invoice = await _context.Invoices.Include(i => i.Attachments).FirstAsync(i => i.Id == id);
             if (invoice == null)
             {
                 return NotFound(new ApiResponse<InvoiceResponse>
@@ -222,6 +223,102 @@ namespace InvoiceManagement.Api.Controllers
                 Message = "Invoice deleted successfully."
             });
         }
+
+        [HttpPost("upload-attachment/{id}")]
+        public async Task<IActionResult> Upload(int id, IFormFile file)
+        {
+
+            var invoice = await _context.Invoices.FindAsync(id);
+            if (invoice == null)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invoice not found."
+                });
+            }
+
+            //Check if User have rights to delete attachment for the given invoice
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null || (!User.IsInRole("Admin") && user.VendorId != invoice.VendorId))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, (new ApiResponse
+                {
+                    Success = false,
+                    Message = "You do not have permission to add an attachment for this invoice."
+                }));
+            }
+
+            if (file == null)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "File is required."
+                });
+            }
+
+            bool isPdf = file.ContentType == "application/pdf";
+            bool isFileSizeValid = file.Length <= MaxFileSize;
+
+            //Check File Requirement
+            if (!isPdf || isFileSizeValid)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = !isPdf ? "Only PDF files are allowed." : "File size exceeds the maximum limit."
+                });
+            }
+            
+            //Create Directory
+            var uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Uploads");
+
+            if (!Directory.Exists(uploadFolder))
+                Directory.CreateDirectory(uploadFolder);
+
+            //Generate FileName and Path
+            var fileExtension = Path.GetExtension(file.FileName);
+            var storedFileName = $"{Guid.NewGuid()}{fileExtension}";
+            var filePath = Path.Combine(uploadFolder, storedFileName);
+
+            if (System.IO.File.Exists(filePath))
+            {
+                return Conflict(new ApiResponse
+                {
+                    Success = false,
+                    Message = "File already exists."
+                });
+            }
+
+            //Copy
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            //Attach File Path to Invoice
+            var attachment = new Attachment
+            {
+                InvoiceId = invoice.Id,
+                FileName = storedFileName,
+                OriginalName = file.FileName,
+                UploadedAt = DateTimeOffset.UtcNow,
+            };
+
+            _context.Attachments.Add(attachment);
+            await _context.SaveChangesAsync();
+
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = "Attachment uploaded successfully."
+            });
+        }
+
 
     }
 }

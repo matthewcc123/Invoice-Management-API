@@ -91,8 +91,15 @@ var app = builder.Build();
 //Seed Database
 using (var scope = app.Services.CreateScope())
 {
-    var seedService = scope.ServiceProvider.GetRequiredService<SeedService>();
-    await seedService.SeedDataAsync();
+    var services = scope.ServiceProvider;
+
+    var context = services.GetRequiredService<AppDbContext>();
+
+    // Apply migrations only once
+    await context.Database.MigrateAsync();
+
+    var seeder = services.GetRequiredService<SeedService>();
+    await seeder.SeedDataAsync();
 }
 
 //Configure the HTTP request pipeline.
@@ -125,6 +132,9 @@ app.UseHttpsRedirection();
 //Auth
 app.UseAuthentication();
 app.UseAuthorization();
+
+//wwwroot
+app.UseStaticFiles();
 
 app.MapControllers();
 

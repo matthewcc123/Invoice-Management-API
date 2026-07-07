@@ -7,8 +7,8 @@ namespace InvoiceManagement.Api.Models
     {
 
         public int Id { get; set; }
-        public string InvoiceNumber { get; set; } = string.Empty;
-        public DateTime InvoiceDate { get; set; }
+        public string? InvoiceNumber { get; set; } = string.Empty;
+        public DateTime? InvoiceDate { get; set; }
         public DateTime? DueDate { get; set; }
 
         //Historical tracking
@@ -20,9 +20,9 @@ namespace InvoiceManagement.Api.Models
         public Vendor? Vendor { get; set; }
 
         //Financial
-        public decimal SubTotal { get; set; }
-        public decimal TaxAmount { get; set; }
-        public decimal TotalAmount { get; set; }
+        public decimal? SubTotal { get; set; } = 0;
+        public decimal? TaxAmount { get; set; } = 0;
+        public decimal? TotalAmount { get; set; } = 0;
 
         //File attachments
         public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();

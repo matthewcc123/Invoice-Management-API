@@ -122,25 +122,25 @@ Developed a REST API for receiving vendor invoices, managing the review and appr
 
 ## Upload
 
-- [ ]  Create Upload Folder
-- [ ]  Configure Static Files
-- [ ]  Upload PDF
-- [ ]  Save File Path
+- [x]  Create Upload Folder
+- [x]  Configure Static Files
+- [x]  Upload PDF
+- [x]  Save File Path
 
 ## Validation
 
-- [ ]  Only PDF
-- [ ]  Maximum File Size
-- [ ]  File Exists
+- [x]  Only PDF
+- [x]  Maximum File Size
+- [x]  File Exists
 
 ## API
 
-- [ ]  Upload Invoice Endpoint
+- [x]  Upload Invoice Endpoint
 
 ## Testing
 
-- [ ]  Upload Success
-- [ ]  Invalid File
+- [x]  Upload Success
+- [x]  Invalid File
 
 ---
 
