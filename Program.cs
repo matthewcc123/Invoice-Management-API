@@ -24,8 +24,10 @@ builder.Services.AddControllers().AddJsonOptions(options =>
         ); 
 });
 
+
 builder.Services.AddOpenApi(options =>
 {
+    //Scalar Transofmer
     options.AddDocumentTransformer((document, context, cancellationToken) =>
     {
         document.Components ??= new();
@@ -54,6 +56,23 @@ builder.Services.AddOpenApi(options =>
                 Array.Empty<string>()
             }
         });
+
+        return Task.CompletedTask;
+    });
+
+    options.AddSchemaTransformer((schema, context, _) =>
+    {
+        if (context.JsonTypeInfo.Type.IsEnum)
+        {
+            schema.Type = "string";
+            schema.Format = null;
+            schema.Enum.Clear();
+
+            foreach (var name in Enum.GetNames(context.JsonTypeInfo.Type))
+            {
+                schema.Enum.Add(new Microsoft.OpenApi.Any.OpenApiString(name));
+            }
+        }
 
         return Task.CompletedTask;
     });

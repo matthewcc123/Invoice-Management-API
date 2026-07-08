@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace InvoiceManagement.Api.DTOs
 {
-    public class InvoiceUpdateRequest
+    public class InvoiceEditRequest
     {
         [Required]
         public string? InvoiceNumber { get; set; }

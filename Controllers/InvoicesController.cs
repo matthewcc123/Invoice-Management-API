@@ -132,9 +132,9 @@ namespace InvoiceManagement.Api.Controllers
 
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("edit/{id}")]
         [Authorize]
-        public async Task<IActionResult> UpdateInvoice(int id, InvoiceUpdateRequest invoiceRequest)
+        public async Task<IActionResult> Edit(int id, InvoiceEditRequest invoiceRequest)
         {
             var invoice = await _context.Invoices.FindAsync(id);
 
@@ -144,6 +144,15 @@ namespace InvoiceManagement.Api.Controllers
                 {
                     Success = false,
                     Message = "Invoice not found."
+                });
+            }
+
+            if (invoice.Status != InvoiceStatus.Draft && invoice.Status != InvoiceStatus.Rejected)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Only draft or rejected invoice can be edited"
                 });
             }
 
@@ -238,7 +247,8 @@ namespace InvoiceManagement.Api.Controllers
 
             //Check if User have rights to delete attachment for the given invoice
             var user = await GetCurrentUserAsync();
-            if (user == null || !HasVendorAccess(user, invoice.VendorId))
+            bool isNotDraft = invoice.Status != InvoiceStatus.Draft || invoice.Status != InvoiceStatus.Rejected;
+            if (user == null || !HasVendorAccess(user, invoice.VendorId) || (!User.IsInRole("Admin") && isNotDraft))
             {
                 return StatusCode(StatusCodes.Status403Forbidden, (new ApiResponse
                 {
@@ -428,15 +438,22 @@ namespace InvoiceManagement.Api.Controllers
             };
 
             //Change Invoice Status
-            invoice.Status = invoiceReviewRequest.Action == ReviewAction.Approved ? InvoiceStatus.Approved : InvoiceStatus.Rejected;
+            if (!invoiceReviewRequest.IsDeliveryRequired)
+            {
+                invoice.DeliveryStatus = InvoiceDeliveryStatus.Received;
+                invoice.ReceivedAt = now;
+            }
 
+            invoice.DeliveryStatus = invoiceReviewRequest.IsDeliveryRequired ? InvoiceDeliveryStatus.Pending : InvoiceDeliveryStatus.Received;
+            invoice.Status = invoiceReviewRequest.Action == ReviewAction.Approved ? InvoiceStatus.Approved : InvoiceStatus.Rejected;
 
             //Update DB
             Barcode? barcode = null;
 
             if (invoiceReviewRequest.Action == ReviewAction.Approved)
             {
-                barcode = await _barcodeService.GenerateBarcodeAsync(invoice.Id);
+                var prefix = "INV" + DateTime.UtcNow.ToString("MMyyyy");
+                barcode = await _barcodeService.GenerateBarcodeAsync(invoice.Id, prefix);
                 await _context.Barcodes.AddAsync(barcode);
             }
 
@@ -463,6 +480,186 @@ namespace InvoiceManagement.Api.Controllers
             {
                 Success = true,
                 Message = invoiceReviewRequest.Action == ReviewAction.Approved ? $"Invoice approved successfully." : $"Invoice rejected successfully."
+            });
+        }
+
+        [HttpPost("{id}/receive")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> MarkAsReceived(int id)
+        {
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            string username = User.FindFirst(ClaimTypes.Name)!.Value;
+
+            var invoice = await _context.Invoices.FindAsync(id);
+
+            if (invoice == null)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invoice not found."
+                });
+            }
+
+
+            if (invoice.Status != InvoiceStatus.Approved && invoice.DeliveryStatus != InvoiceDeliveryStatus.Pending)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Only approved invoice that have pending delivery can be marked as received."
+                });
+            }
+
+            if (invoice.DeliveryStatus == InvoiceDeliveryStatus.Received)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invoice already received."
+                });
+            }
+
+            //Create Review
+            var now = DateTimeOffset.UtcNow;
+
+            //Add UpdateLog
+            var updateLog = new UpdateLog
+            {
+                EntityType = nameof(Invoice),
+                EntityId = invoice.Id,
+                DateTime = now,
+                Description = $"Invoice received by {username}"
+            };
+
+            //Change Invoice Status
+            invoice.ReceivedAt = now;
+            invoice.DeliveryStatus = InvoiceDeliveryStatus.Received;
+
+            //Update DB
+            await _context.UpdateLogs.AddAsync(updateLog);
+            _context.Entry(invoice).State = EntityState.Modified;
+
+            //Apply Changes
+            await _context.SaveChangesAsync();
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = "Invoice marked as received."
+            });
+        }
+
+        [HttpPost("{id}/process")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> MarkAsOnProcess(int id)
+        {
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            string username = User.FindFirst(ClaimTypes.Name)!.Value;
+
+            var invoice = await _context.Invoices.FindAsync(id);
+
+            if (invoice == null)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invoice not found."
+                });
+            }
+
+
+            if (invoice.Status != InvoiceStatus.Approved || invoice.DeliveryStatus != InvoiceDeliveryStatus.Received)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Only approved invoice and received can be marked as on process."
+                });
+            }
+
+            //Create Review
+            var now = DateTimeOffset.UtcNow;
+
+            //Add UpdateLog
+            var updateLog = new UpdateLog
+            {
+                EntityType = nameof(Invoice),
+                EntityId = invoice.Id,
+                DateTime = now,
+                Description = $"Invoice updated to on process by {username}"
+            };
+
+
+            //Update DB
+            invoice.Status = InvoiceStatus.OnProcess;
+            await _context.UpdateLogs.AddAsync(updateLog);
+            _context.Entry(invoice).State = EntityState.Modified;
+
+            //Apply Changes
+            await _context.SaveChangesAsync();
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = "Invoice marked as on process."
+            });
+        }
+
+        [HttpPost("{id}/paid")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> MarkAsPaid(int id)
+        {
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            string username = User.FindFirst(ClaimTypes.Name)!.Value;
+
+            var invoice = await _context.Invoices.FindAsync(id);
+
+            if (invoice == null)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Invoice not found."
+                });
+            }
+
+
+            if (invoice.Status != InvoiceStatus.OnProcess)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Only on process invoice can be marked as paid."
+                });
+            }
+
+            //Create Review
+            var now = DateTimeOffset.UtcNow;
+
+            //Add UpdateLog
+            var updateLog = new UpdateLog
+            {
+                EntityType = nameof(Invoice),
+                EntityId = invoice.Id,
+                DateTime = now,
+                Description = $"Invoice updated to on paid by {username}"
+            };
+
+
+            //Update DB
+            invoice.PaidAt = now;
+            invoice.Status = InvoiceStatus.Paid;
+            await _context.UpdateLogs.AddAsync(updateLog);
+            _context.Entry(invoice).State = EntityState.Modified;
+
+            //Apply Changes
+            await _context.SaveChangesAsync();
+
+            return Ok(new ApiResponse
+            {
+                Success = true,
+                Message = "Invoice marked as paid."
             });
         }
 

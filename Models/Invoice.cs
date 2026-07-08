@@ -13,6 +13,8 @@ namespace InvoiceManagement.Api.Models
 
         //Historical tracking
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset? ReceivedAt { get; set; }
+        public DateTimeOffset? PaidAt { get; set; }
         public ICollection<UpdateLog> UpdateLogs { get; set; } = new List<UpdateLog>();
 
         //Vendor relationship
@@ -35,6 +37,7 @@ namespace InvoiceManagement.Api.Models
 
         //Status
         public InvoiceStatus Status { get; set; } = InvoiceStatus.Draft;
+        public InvoiceDeliveryStatus? DeliveryStatus { get; set; }
 
     }
 }

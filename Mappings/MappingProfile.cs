@@ -24,7 +24,9 @@ namespace InvoiceManagement.Api.Mappings
             CreateMap<Invoice, InvoiceDetailResponse>().ForMember(dest => dest.Barcode, opt => opt.MapFrom(src => src.Barcode != null ? src.Barcode.Code : null)).ReverseMap();
             CreateMap<InvoiceCreateRequest, Invoice>();
 
-            CreateMap<InvoiceUpdateRequest, Invoice>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            CreateMap<UpdateLog, UpdateLogResponse>().ReverseMap();
+
+            CreateMap<InvoiceEditRequest, Invoice>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<Attachment, AttachmentResponse>().ReverseMap();
 

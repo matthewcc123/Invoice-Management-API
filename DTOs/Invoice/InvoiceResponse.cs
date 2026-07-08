@@ -13,6 +13,8 @@ namespace InvoiceManagement.Api.DTOs
 
         //Historical tracking
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset? ReceivedAt { get; set; }
+        public DateTimeOffset? PaidAt { get; set; }
 
         //Vendor
         public int VendorId { get; set; }
@@ -26,6 +28,7 @@ namespace InvoiceManagement.Api.DTOs
         public string? Barcode { get; set; }
 
         //Status
-        public InvoiceStatus Status { get; set; } = InvoiceStatus.Pending;
+        public InvoiceStatus Status { get; set; }
+        public InvoiceDeliveryStatus? DeliveryStatus { get; set; }
     }
 }

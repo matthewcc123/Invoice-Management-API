@@ -9,7 +9,9 @@ namespace InvoiceManagement.Api.DTOs
         [Required]
         public string Remarks { get; set; } = string.Empty;
         [Required]
-        public ReviewAction Action { get; set; }
+        public ReviewAction Action { get; set; } = ReviewAction.Approved;
+        [Required]
+        public bool IsDeliveryRequired { get; set; } = false;
 
     }
 }

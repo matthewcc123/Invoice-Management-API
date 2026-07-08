@@ -18,10 +18,8 @@ namespace InvoiceManagement.Api.Services
             _context = context;
         }
 
-        private async Task<string> GenerateCode()
+        private async Task<string> GenerateCode(string prefix)
         {
-            var prefix = "INV" + DateTime.UtcNow.ToString("MMyyyy");
-
             var lastCode = await _context.Barcodes
                 .Where(b => b.Code.StartsWith(prefix))
                 .OrderByDescending(b => b.Code)
@@ -35,15 +33,15 @@ namespace InvoiceManagement.Api.Services
                 nextNumber = int.Parse(lastCode.Replace(prefix, string.Empty)) + 1;
             }
 
-            return $"{prefix}{nextNumber:D4}";
+            return $"{prefix}{nextNumber:D8}";
         }
 
-        public async Task<Barcode> GenerateBarcodeAsync(int invoiceId)
+        public async Task<Barcode> GenerateBarcodeAsync(int invoiceId, string prefix)
         {
             return new Barcode
             {
                 InvoiceId = invoiceId,
-                Code = await GenerateCode(),
+                Code = await GenerateCode(prefix),
                 CreatedAt = DateTimeOffset.UtcNow
             };
         }

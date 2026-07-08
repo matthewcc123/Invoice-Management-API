@@ -6,7 +6,7 @@
         Pending,
         Approved,
         Rejected,
-        ToReceive,
-        Received
+        OnProcess,
+        Paid
     }
 }

@@ -197,14 +197,14 @@ Developed a REST API for receiving vendor invoices, managing the review and appr
 
 ## API
 
-- [ ]  Mark Ready To Send
-- [ ]  Mark Completed
+- [x]  Mark Ready To Send
+- [x]  Mark Completed
 
 ## Business Rules
 
-- [ ]  Approved → ReadyToSend
-- [ ]  ReadyToSend → Completed
-- [ ]  Reject Invalid Status Transition
+- [x]  Approved → ReadyToSend
+- [x]  ReadyToSend → Completed
+- [x]  Reject Invalid Status Transition
 
 ---
 
@@ -261,12 +261,12 @@ Developed a REST API for receiving vendor invoices, managing the review and appr
 
 ## Seed Data
 
-- [ ]  Admin User
-- [ ]  Sample Vendors
+- [x]  Admin User
+- [x]  Sample Vendors
 
 ## Documentation
 
-- [ ]  README
+- [x]  README
 - [ ]  API Documentation
 
 ---
