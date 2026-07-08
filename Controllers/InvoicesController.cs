@@ -2,6 +2,7 @@
 using InvoiceManagement.Api.Data;
 using InvoiceManagement.Api.DTOs;
 using InvoiceManagement.Api.Enum;
+using InvoiceManagement.Api.Extensions;
 using InvoiceManagement.Api.Models;
 using InvoiceManagement.Api.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -28,18 +29,55 @@ namespace InvoiceManagement.Api.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> GetInvoices()
+        public async Task<IActionResult> GetInvoices([FromQuery] InvoiceQuery query)
         {
-            // This will filter only the users that belong to the same vendor as the authenticated user, unless the user is an Admin.
+            var user = await GetCurrentUserAsync();
+            if (user == null)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, (new ApiResponse
+                {
+                    Success = false,
+                    Message = "You are not authorized."
+                }));
+            }
 
-            var invoices = await _context.Invoices.Include(i => i.Barcode).ToListAsync();
+            var vendorId = user.VendorId;
+
+            var invoiceQuery = _context.Invoices.Include(i => i.Barcode).AsQueryable();
+            int totalRecords = _context.Invoices.Count();
+
+
+            if (query.FromDate != null || query.ToDate != null)
+            {
+                var range = new DateRange
+                {
+                    From = query.FromDate,
+                    To = query.ToDate ?? DateTime.UtcNow
+                };
+
+                if (!range.From.HasValue || range.From <= range.To)
+                {
+                    invoiceQuery = invoiceQuery.ApplyFilter(nameof(Invoice.CreatedAt), range);
+                }
+            }
+
+            invoiceQuery = invoiceQuery.ApplyFilter(nameof(Invoice.VendorId), User.IsInRole("Admin") ? null : vendorId);
+            invoiceQuery = invoiceQuery.ApplyFilter(nameof(Invoice.Status), query.Status);
+            invoiceQuery = invoiceQuery.ApplyFilter(nameof(Invoice.DeliveryStatus), query.DeliveryStatus);
+            invoiceQuery = invoiceQuery.ApplySearch(query.Search, x => x.InvoiceNumber, x => x.Barcode!.Code);
+            invoiceQuery = invoiceQuery.ApplySort(query.SortBy ?? nameof(Vendor.Id), query.Order);
+            invoiceQuery = invoiceQuery.ApplyPagination(query.PageNumber, query.PageSize);
+
+            var invoices = await invoiceQuery.ToListAsync();
             var invoicesResponse = _mapper.Map<List<InvoiceResponse>>(invoices);
 
-            return Ok(new ApiResponse<List<InvoiceResponse>>
+            var pagedInvoices = new PagedResponse<InvoiceResponse>(invoicesResponse, query.PageNumber, query.PageSize, totalRecords);
+
+            return Ok(new ApiResponse<PagedResponse<InvoiceResponse>>
             {
                 Success = true,
                 Message = "Invoices retrieved successfully.",
-                Data = invoicesResponse
+                Data = pagedInvoices
             });
         }
 

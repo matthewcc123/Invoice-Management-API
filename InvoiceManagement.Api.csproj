@@ -20,6 +20,7 @@
     </PackageReference>
     <PackageReference Include="Scalar.AspNetCore" Version="2.16.10" />
     <PackageReference Include="SkiaSharp" Version="4.148.0" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.7.2" />
     <PackageReference Include="ZXing.Net" Version="0.16.11" />
     <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.22" />
   </ItemGroup>

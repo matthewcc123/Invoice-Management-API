@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
 using InvoiceManagement.Api.Data;
 using InvoiceManagement.Api.DTOs;
+using InvoiceManagement.Api.Extensions;
 using InvoiceManagement.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using System.Linq.Dynamic.Core;
 
 namespace InvoiceManagement.Api.Controllers
 {
@@ -25,15 +27,25 @@ namespace InvoiceManagement.Api.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] VendorQuery query)
         {
-            var vendors = await _context.Vendors.ToListAsync();
+            var vendorsQuery = _context.Vendors.AsQueryable();
+            int totalRecords = _context.Vendors.Count();
+
+            vendorsQuery = vendorsQuery = vendorsQuery.ApplySearch(query.Search, x => x.Name, x => x.Email);
+            vendorsQuery = vendorsQuery.ApplySort(query.SortBy ?? nameof(Vendor.Id), query.Order);
+            vendorsQuery = vendorsQuery.ApplyPagination(query.PageNumber, query.PageSize);
+
+            var vendors = await vendorsQuery.ToListAsync();
             var vendorDtos = _mapper.Map<List<VendorResponse>>(vendors);
-            return Ok(new ApiResponse<List<VendorResponse>>
+
+            var pagedVendors = new PagedResponse<VendorResponse>(vendorDtos, query.PageNumber, query.PageSize, totalRecords);
+
+            return Ok(new ApiResponse<PagedResponse<VendorResponse>>
             {
                 Success = true,
                 Message = "Vendors retrieved successfully.",
-                Data = vendorDtos
+                Data = pagedVendors
             });
         }
 

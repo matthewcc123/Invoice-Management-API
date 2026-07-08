@@ -212,20 +212,20 @@ Developed a REST API for receiving vendor invoices, managing the review and appr
 
 ## Search
 
-- [ ]  Invoice Number
-- [ ]  Vendor
-- [ ]  Status
-- [ ]  Date Range
+- [x]  Invoice Number
+- [x]  Vendor
+- [x]  Status
+- [x]  Date Range
 
 ## Pagination
 
-- [ ]  Page
-- [ ]  Page Size
+- [x]  Page
+- [x]  Page Size
 
 ## Sorting
 
-- [ ]  Invoice Date
-- [ ]  Created Date
+- [x]  Invoice Date
+- [x]  Created Date
 
 ---
 

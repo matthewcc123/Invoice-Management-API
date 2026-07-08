@@ -13,7 +13,7 @@ namespace InvoiceManagement.Api.Mappings
             CreateMap<VendorRequest, Vendor>();
 
             CreateMap<User, UserResponse>().ReverseMap();
-            CreateMap<UserUpdateRequest, User>();
+            CreateMap<UserEditRequest, User>();
             CreateMap<UserDeleteRequest, User>();
 
             CreateMap<AuthRegisterRequest, User>().ReverseMap();

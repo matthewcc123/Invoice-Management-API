@@ -60,6 +60,25 @@ namespace InvoiceManagement.Api.Data
                 .HasIndex(b => b.Code)
                 .IsUnique();
 
+
+            if (Database.IsSqlite())
+            {
+                foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+                {
+                    var properties = entityType.GetProperties()
+                        .Where(p => p.ClrType == typeof(DateTimeOffset)
+                                 || p.ClrType == typeof(DateTimeOffset?));
+
+                    foreach (var property in properties)
+                    {
+                        property.SetValueConverter(new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTimeOffset, string>(
+                            v => v.ToString("O"), // Converts to ISO 8601 string round-trip format
+                            v => DateTimeOffset.Parse(v)
+                        ));
+                    }
+                }
+            }
+
         }
 
     }

@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using InvoiceManagement.Api.Data;
 using InvoiceManagement.Api.DTOs;
+using InvoiceManagement.Api.Extensions;
+using InvoiceManagement.Api.Migrations;
 using InvoiceManagement.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using System.Numerics;
 using System.Security.Claims;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace InvoiceManagement.Api.Controllers
 {
@@ -27,19 +30,27 @@ namespace InvoiceManagement.Api.Controllers
 
 
         [HttpGet]
-        [Authorize]
-        public async Task<IActionResult> GetAll()
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAll([FromQuery] UserQuery query)
         {
-            // This will filter only the users that belong to the same vendor as the authenticated user, unless the user is an Admin.
 
-            var users = await _context.Users.ToListAsync();
+            var userQuery = _context.Users.AsQueryable();
+            int totalRecords = _context.Users.Count();
+
+            userQuery = userQuery.ApplySearch(query.Search, x => x.Username, x => x.Email);
+            userQuery = userQuery.ApplySort(query.SortBy ?? nameof(Vendor.Id), query.Order);
+            userQuery = userQuery.ApplyPagination(query.PageNumber, query.PageSize);
+
+            var users = await userQuery.ToListAsync();
             var usersDto = _mapper.Map<List<UserResponse>>(users);
 
-            return Ok(new ApiResponse<List<UserResponse>>
+            var pagedUsers = new PagedResponse<UserResponse>(usersDto, query.PageNumber, query.PageSize, totalRecords);
+
+            return Ok(new ApiResponse<PagedResponse<UserResponse>>
             { 
                 Success = true,
                 Message = "Users retrieved successfully.",
-                Data = usersDto
+                Data = pagedUsers
             });
         }
 
@@ -77,9 +88,9 @@ namespace InvoiceManagement.Api.Controllers
             });
         }
 
-        [HttpPut("update/{id}")]
+        [HttpPut("edit/{id}")]
         [Authorize]
-        public async Task<IActionResult> Update(int id, UserUpdateRequest userUpdateRequest)
+        public async Task<IActionResult> Edit(int id, UserEditRequest userEditRequest)
         {
             int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             if (userId != id && !User.IsInRole("Admin"))
@@ -87,7 +98,7 @@ namespace InvoiceManagement.Api.Controllers
                 return StatusCode(StatusCodes.Status403Forbidden, new ApiResponse
                 {
                     Success = false,
-                    Message = $"You're not authorized to update this user."
+                    Message = $"You're not authorized to edit this user."
                 });
             }
 
@@ -102,7 +113,7 @@ namespace InvoiceManagement.Api.Controllers
                 });
             }
 
-            var updatedUser = _mapper.Map(userUpdateRequest, user);
+            var updatedUser = _mapper.Map(userEditRequest, user);
             _context.Entry(updatedUser).State = EntityState.Modified;
 
             try

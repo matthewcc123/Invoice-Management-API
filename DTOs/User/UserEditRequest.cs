@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace InvoiceManagement.Api.DTOs
 {
-    public class UserUpdateRequest
+    public class UserEditRequest
     {
         [Required]
         public string? Username { get; set; }
