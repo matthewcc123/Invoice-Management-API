@@ -22,7 +22,7 @@ namespace InvoiceManagement.Api.Controllers
         }
 
 
-        [HttpGet("preview/{name}")]
+        [HttpGet("{name}")]
         [Authorize]
         public async Task<IActionResult> Preview(string name)
         {
@@ -65,54 +65,7 @@ namespace InvoiceManagement.Api.Controllers
             var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
             var fileExtension = Path.GetExtension(attachment.FileName);
 
-            return File(stream, $"application/{fileExtension}");
-
-        }
-
-        [HttpGet("download/{name}")]
-        [Authorize]
-        public async Task<IActionResult> Download(string name)
-        {
-            var attachment = await _context.Attachments.Include(a => a.Invoice).FirstOrDefaultAsync(a => a.FileName == name);
-
-            if (attachment == null)
-            {
-                return NotFound(new ApiResponse<InvoiceResponse>
-                {
-                    Success = false,
-                    Message = "Attachment not found."
-                });
-            }
-
-            //Check if User have rights to access invoice for the given vendor
-            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var user = await _context.Users.FindAsync(userId);
-
-            if (user == null || (!User.IsInRole("Admin") && user.VendorId != attachment.Invoice!.VendorId))
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, (new ApiResponse
-                {
-                    Success = false,
-                    Message = "You do not have permission to access an attachment from this invoice."
-                }));
-            }
-
-            //Create Directory
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Uploads", attachment.FileName);
-
-            if (!System.IO.File.Exists(filePath))
-            {
-                return NotFound(new ApiResponse<InvoiceResponse>
-                {
-                    Success = false,
-                    Message = "Attachment not found."
-                });
-            }
-
-            var bytes = await System.IO.File.ReadAllBytesAsync(filePath);
-            var fileExtension = Path.GetExtension(attachment.FileName);
-
-            return File(bytes, $"application/{fileExtension}", attachment.OriginalName);
+            return File(stream, $"application/{fileExtension}", attachment.OriginalName);
 
         }
 

@@ -22,6 +22,9 @@ namespace InvoiceManagement.Api.DTOs
         public decimal TaxAmount { get; set; }
         public decimal TotalAmount { get; set; }
 
+        //Barcodes
+        public string? Barcode { get; set; }
+
         //Status
         public InvoiceStatus Status { get; set; } = InvoiceStatus.Pending;
     }

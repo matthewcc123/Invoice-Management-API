@@ -29,6 +29,9 @@ namespace InvoiceManagement.Api.DTOs
         //Reviews
         public ICollection<InvoiceReviewResponse>? Reviews { get; set; }
 
+        //Barcodes
+        public string? Barcode { get; set; }
+
         //Status
         public InvoiceStatus Status { get; set; } = InvoiceStatus.Pending;
     }

@@ -174,22 +174,22 @@ Developed a REST API for receiving vendor invoices, managing the review and appr
 
 ## Barcode
 
-- [ ]  Create Barcode Service
-- [ ]  Generate Barcode Number
-- [ ]  Save Barcode
+- [x]  Create Barcode Service
+- [x]  Generate Barcode Number
+- [x]  Save Barcode
 
 ## API
 
-- [ ]  Generate Barcode Endpoint
+- [x]  Generate Barcode Endpoint
 
 ## Business Rules
 
-- [ ]  Only Approved Invoice
-- [ ]  Barcode Generated Once
+- [x]  Only Approved Invoice
+- [x]  Barcode Generated Once
 
 ## Bonus
 
-- [ ]  Barcode Image (ZXing)
+- [x]  Barcode Image (ZXing)
 
 ---
 

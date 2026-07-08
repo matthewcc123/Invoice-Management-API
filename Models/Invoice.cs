@@ -30,6 +30,9 @@ namespace InvoiceManagement.Api.Models
         //Reviews
         public ICollection<InvoiceReview> Reviews { get; set; } = new List<InvoiceReview>();
 
+        //Barcodes
+        public Barcode? Barcode { get; set; }
+
         //Status
         public InvoiceStatus Status { get; set; } = InvoiceStatus.Draft;
 

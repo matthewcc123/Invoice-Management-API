@@ -14,6 +14,7 @@ namespace InvoiceManagement.Api.Data
         public DbSet<Attachment> Attachments => Set<Attachment>();
         public DbSet<UpdateLog> UpdateLogs => Set<UpdateLog>();
         public DbSet<InvoiceReview> InvoiceReviews => Set<InvoiceReview>();
+        public DbSet<Barcode> Barcodes => Set<Barcode>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -46,6 +47,19 @@ namespace InvoiceManagement.Api.Data
                 .WithMany(r => r.Reviews)
                 .HasForeignKey(e => e.InvoiceId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            //Invoice One To One Barcodes
+            modelBuilder.Entity<Invoice>()
+                .HasOne(e => e.Barcode)
+                .WithOne(b => b.Invoice)
+                .HasForeignKey<Barcode>(b => b.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            //Unique constraint on Barcode Code property
+            modelBuilder.Entity<Barcode>()
+                .HasIndex(b => b.Code)
+                .IsUnique();
+
         }
 
     }

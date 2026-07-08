@@ -3,6 +3,7 @@ using InvoiceManagement.Api.Data;
 using InvoiceManagement.Api.DTOs;
 using InvoiceManagement.Api.Enum;
 using InvoiceManagement.Api.Models;
+using InvoiceManagement.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,11 +17,13 @@ namespace InvoiceManagement.Api.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
+        private readonly BarcodeService _barcodeService;
         private readonly long MaxFileSize = 5 * 1024;
-        public InvoicesController(AppDbContext context, IMapper mapper)
+        public InvoicesController(AppDbContext context, IMapper mapper, BarcodeService barcodeService)
         {
             _context = context;
             _mapper = mapper;
+            _barcodeService = barcodeService;
         }
 
         [HttpGet]
@@ -29,7 +32,7 @@ namespace InvoiceManagement.Api.Controllers
         {
             // This will filter only the users that belong to the same vendor as the authenticated user, unless the user is an Admin.
 
-            var invoices = await _context.Invoices.ToListAsync();
+            var invoices = await _context.Invoices.Include(i => i.Barcode).ToListAsync();
             var invoicesResponse = _mapper.Map<List<InvoiceResponse>>(invoices);
 
             return Ok(new ApiResponse<List<InvoiceResponse>>
@@ -44,7 +47,7 @@ namespace InvoiceManagement.Api.Controllers
         [Authorize]
         public async Task<IActionResult> GetInvoice(int id)
         {
-            var invoice = await _context.Invoices.Include(i => i.Attachments).Include(i => i.Reviews).FirstAsync(i => i.Id == id);
+            var invoice = await _context.Invoices.Include(i => i.Attachments).Include(i => i.Reviews).Include(i => i.Barcode).FirstAsync(i => i.Id == id);
             if (invoice == null)
             {
                 return NotFound(new ApiResponse<InvoiceResponse>
@@ -414,26 +417,52 @@ namespace InvoiceManagement.Api.Controllers
                 ReviewedByUserId = userId
             };
 
+
             //Add UpdateLog
             var updateLog = new UpdateLog
             {
                 EntityType = nameof(Invoice),
                 EntityId = invoice.Id,
                 DateTime = now,
-                Description = $"Invoice reviewed by {username}"
+                Description = $"Invoice {invoiceReviewRequest.Action} by {username}"
             };
 
-            //Apply
+            //Change Invoice Status
             invoice.Status = invoiceReviewRequest.Action == ReviewAction.Approved ? InvoiceStatus.Approved : InvoiceStatus.Rejected;
-            _context.Entry(invoice).State = EntityState.Modified;
+
+
+            //Update DB
+            Barcode? barcode = null;
+
+            if (invoiceReviewRequest.Action == ReviewAction.Approved)
+            {
+                barcode = await _barcodeService.GenerateBarcodeAsync(invoice.Id);
+                await _context.Barcodes.AddAsync(barcode);
+            }
+
             await _context.InvoiceReviews.AddAsync(review);
             await _context.UpdateLogs.AddAsync(updateLog);
-            await _context.SaveChangesAsync();
+
+            _context.Entry(invoice).State = EntityState.Modified;
+
+            //Apply Changes
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse
+                {
+                    Success = false,
+                    Message = "Failed to generate a unique barcode. Please try again."
+                });
+            }
 
             return Ok(new ApiResponse
             {
                 Success = true,
-                Message = $"Invoice {invoiceReviewRequest.Action}."
+                Message = invoiceReviewRequest.Action == ReviewAction.Approved ? $"Invoice approved successfully." : $"Invoice rejected successfully."
             });
         }
 
@@ -448,6 +477,7 @@ namespace InvoiceManagement.Api.Controllers
         {
             return User.IsInRole("Admin") || user.VendorId == vendorId;
         }
+
 
     }
 }

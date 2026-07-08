@@ -20,8 +20,8 @@ namespace InvoiceManagement.Api.Mappings
             CreateMap<AuthUpdatePasswordRequest, User>();
             CreateMap<AuthUpdateRoleRequest, User>();
 
-            CreateMap<Invoice, InvoiceResponse>().ReverseMap();
-            CreateMap<Invoice, InvoiceDetailResponse>().ReverseMap();
+            CreateMap<Invoice, InvoiceResponse>().ForMember(dest => dest.Barcode, opt => opt.MapFrom(src => src.Barcode != null ? src.Barcode.Code : null)).ReverseMap();
+            CreateMap<Invoice, InvoiceDetailResponse>().ForMember(dest => dest.Barcode, opt => opt.MapFrom(src => src.Barcode != null ? src.Barcode.Code : null)).ReverseMap();
             CreateMap<InvoiceCreateRequest, Invoice>();
 
             CreateMap<InvoiceUpdateRequest, Invoice>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
