@@ -2,7 +2,109 @@
 
 Developed a REST API for receiving vendor invoices, managing the review and approval workflow, generating barcodes, and tracking the physical invoice delivery process. Built with .NET 9, Entity Framework Core, AutoMapper, and Scalar for API documentation.
 
+<br>
+
+## What it does
+
+* **Login & Roles:** Has simple JWT authentication with two roles: Admin and Vendor.
+* **Invoice Upload:** Vendors can upload invoice files (must be PDFs under the size limit).
+* **Approval Flow:** Invoices start as `Pending`. Admins can review them to change the status to `Approved` or `Rejected`.
+* **Barcodes:** Once an invoice is approved, the system uses `ZXing.Net` to generate a unique barcode number/image for tracking physical delivery.
+* **Search & Filter:** You can search through invoices by number, vendor, status, or date, and it includes basic pagination so the list doesn't get too long.
+* **Simple Dashboard:** Just a quick endpoint to see counters for how many invoices are pending, approved, rejected, or completed.
+
+<br>
+
+## Tech Used
+
+* **Language/Framework:** C# / .NET 9 Web API
+* **Database:** SQLite (using Entity Framework Core)
+* **Libraries:** AutoMapper (for DTOs) and ZXing.Net (for barcodes)
+* **API Docs:** Scalar
+
+<br>
+
+ ## How the Workflow Works
+
+```text
+    [ Vendor Uploads Draft ]
+               │
+               ▼
+         ┌───────────┐
+         │   Draft   │ ◄────────────────────────┐
+         └─────┬─────┘                          │
+               │ (Vendor Submits)               │
+               ▼                                │
+         ┌───────────┐                          │
+         │  Pending  │                          │
+         └─────┬─────┘                          │
+               │ (Admin Reviews)                │
+               ├────────────────────────┐       │
+               ▼                        ▼       │
+         ┌───────────┐            ┌──────────┐  │
+         │ Approved  │            │ Rejected ├──┘ (Edit & Re-submit)
+         └─────┬─────┘            └──────────┘
+               │
+               ▼
+   [ Auto-Generate Barcode ]
+    (Downloadable for all)
+               │
+               ▼
+    (Is Delivery Required?)
+           ┌───┴───┐
+      (Yes)│       │(No)
+           ▼       ▼
+    ┌──────────┐ ┌──────────┐
+    │ Delivery │ │ Digital  │
+    │ Pending  │ │ Invoice  │
+    └────┬─────┘ └────┬─────┘
+         │            │
+ (Physical Received)  │
+         ▼            ▼
+    ┌───────────────────────┐
+    │       Received        │
+    └──────────┬────────────┘
+               │
+               ▼
+    ┌───────────────────────┐
+    │  Processing -> Paid   │
+    └───────────────────────┘
+
+```
+
+<br>
+
+## How to run it locally
+
+1. **Clone this repository:**
+   ```bash
+   git clone [https://github.com/matthewcc123/Invoice-Management-API.git](https://github.com/matthewcc123/Invoice-Management-API.git)
+   cd Invoice-Management-API
+   ```
+   
+2. **Restore packages:**
+   ```bash
+   dotnet restore
+   ```
+
+3. **Setup the database:**
+  Run the EF migration to automatically create the local SQLite database file:
+   ```bash
+   dotnet ef database update
+   ```
+
+4. **Run the API:**
+   ```bash
+   dotnet run
+   ```
+
+Once it's running, you can test the endpoints using the Scalar documentation page in your browser. Just check your terminal output for the local URL (https://localhost:XXXX/scalar)
+
+<br>
+
 ---
+
+<br>
 
 # ✅ Phase 1 - Project Setup
 
