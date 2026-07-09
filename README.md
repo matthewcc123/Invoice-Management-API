@@ -233,31 +233,27 @@ Developed a REST API for receiving vendor invoices, managing the review and appr
 
 ## Statistics
 
-- [ ]  Pending Count
-- [ ]  Approved Count
-- [ ]  Rejected Count
-- [ ]  Completed Count
+- [x]  Pending Count
+- [x]  Approved Count
+- [x]  Rejected Count
+- [x]  Completed Count
 
 ## Optional
 
-- [ ]  Total Invoice Amount
-- [ ]  Monthly Summary
+- [x]  Total Invoice Amount
+- [x]  Monthly Summary
 
 ---
 
 # ✅ Phase 11 - Polish
 
-## Validation
-
-- [ ]  FluentValidation (Optional)
-
 ## Exception Handling
 
-- [ ]  Global Exception Middleware
+- [x]  Global Exception Middleware
 
 ## Logging
 
-- [ ]  Request Logging
+- [x]  Request Logging
 
 ## Seed Data
 
@@ -269,15 +265,3 @@ Developed a REST API for receiving vendor invoices, managing the review and appr
 - [x]  README
 - [ ]  API Documentation
 
----
-
-# 🚀 Bonus Features
-
-- [ ]  Refresh Token
-- [ ]  Role Based Authorization
-- [ ]  Audit Trail
-- [ ]  Soft Delete
-- [ ]  Export PDF
-- [ ]  Docker
-- [ ]  Unit Test
-- [ ]  Integration Test

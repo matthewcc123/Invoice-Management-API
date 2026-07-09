@@ -22,9 +22,9 @@ namespace InvoiceManagement.Api.Models
         public Vendor? Vendor { get; set; }
 
         //Financial
-        public decimal? SubTotal { get; set; } = 0;
-        public decimal? TaxAmount { get; set; } = 0;
-        public decimal? TotalAmount { get; set; } = 0;
+        public decimal SubTotal { get; set; } = 0;
+        public decimal TaxAmount { get; set; } = 0;
+        public decimal TotalAmount { get; set; } = 0;
 
         //File attachments
         public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();

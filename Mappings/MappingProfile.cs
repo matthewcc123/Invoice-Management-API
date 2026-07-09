@@ -17,7 +17,7 @@ namespace InvoiceManagement.Api.Mappings
             CreateMap<UserDeleteRequest, User>();
 
             CreateMap<AuthRegisterRequest, User>().ReverseMap();
-            CreateMap<AuthUpdatePasswordRequest, User>();
+            CreateMap<AuthChangePasswordRequest, User>();
             CreateMap<AuthUpdateRoleRequest, User>();
 
             CreateMap<Invoice, InvoiceResponse>().ForMember(dest => dest.Barcode, opt => opt.MapFrom(src => src.Barcode != null ? src.Barcode.Code : null)).ReverseMap();

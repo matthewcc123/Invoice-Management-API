@@ -15,7 +15,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace InvoiceManagement.Api.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class UsersController : ControllerBase
     {
 

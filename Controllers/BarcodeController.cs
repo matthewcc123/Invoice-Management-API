@@ -11,8 +11,8 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace InvoiceManagement.Api.Controllers
 {
-    [Route("[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class BarcodeController : ControllerBase
     {
         private readonly AppDbContext _context;

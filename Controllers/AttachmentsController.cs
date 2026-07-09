@@ -9,8 +9,9 @@ using System.Security.Claims;
 
 namespace InvoiceManagement.Api.Controllers
 {
-    [Route("[controller]")]
     [ApiController]
+    [EndpointDescription("")]
+    [Route("api/[controller]")]
     public class AttachmentsController : ControllerBase
     {
         private readonly AppDbContext _context;

@@ -12,7 +12,7 @@ using System.Numerics;
 namespace InvoiceManagement.Api.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
 
@@ -107,9 +107,9 @@ namespace InvoiceManagement.Api.Controllers
             });
         }
 
-        [HttpPut("update-password/{id}")]
+        [HttpPut("change-password/{id}")]
         [Authorize]
-        public async Task<IActionResult> UpdatePassword(int id, AuthUpdatePasswordRequest updatePasswordRequest)
+        public async Task<IActionResult> ChangePassword(int id, AuthChangePasswordRequest changePasswordRequest)
         {
             var user = await _context.Users.FindAsync(id);
 
@@ -122,7 +122,7 @@ namespace InvoiceManagement.Api.Controllers
                 });
             }
 
-            bool passwordValid = BCrypt.Net.BCrypt.Verify(updatePasswordRequest.OldPassword, user.Password);
+            bool passwordValid = BCrypt.Net.BCrypt.Verify(changePasswordRequest.OldPassword, user.Password);
 
             if (!passwordValid)
             {
@@ -134,7 +134,7 @@ namespace InvoiceManagement.Api.Controllers
             }
 
             var updatedUser = user;
-            updatedUser.Password = BCrypt.Net.BCrypt.HashPassword(updatePasswordRequest.NewPassword);
+            updatedUser.Password = BCrypt.Net.BCrypt.HashPassword(changePasswordRequest.NewPassword);
             _context.Entry(updatedUser).State = EntityState.Modified;
 
             try

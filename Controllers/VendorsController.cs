@@ -12,7 +12,7 @@ using System.Linq.Dynamic.Core;
 namespace InvoiceManagement.Api.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class VendorsController : ControllerBase
     {
 

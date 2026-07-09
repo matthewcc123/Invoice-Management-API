@@ -1,9 +1,11 @@
 using InvoiceManagement.Api.Data;
 using InvoiceManagement.Api.Enum;
 using InvoiceManagement.Api.Mappings;
+using InvoiceManagement.Api.Middleware;
 using InvoiceManagement.Api.Models;
 using InvoiceManagement.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -14,9 +16,10 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+//AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+//Controller
 builder.Services.AddControllers().AddJsonOptions(options => 
 { 
     options.JsonSerializerOptions.Converters.Add(
@@ -24,7 +27,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
         ); 
 });
 
-
+//Open Api
 builder.Services.AddOpenApi(options =>
 {
     //Scalar Transofmer
@@ -99,7 +102,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     };
 });
 
+//Config
+builder.Services.Configure<RouteOptions>( options =>
+{
+    options.LowercaseUrls = true;
+    options.LowercaseQueryStrings = true;
+});
+
+//Logging
+builder.Services.AddHttpLogging(options =>
+{
+    options.LoggingFields = HttpLoggingFields.RequestMethod | HttpLoggingFields.RequestPath | HttpLoggingFields.ResponseStatusCode | HttpLoggingFields.Duration;
+});
+
+//Auth
 builder.Services.AddAuthorization();
+
+//Service
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<SeedService>();
 builder.Services.AddScoped<BarcodeService>();
@@ -148,6 +167,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+//Middleware
+app.UseMiddleware<ExceptionMiddleware>();
 
 //Auth
 app.UseAuthentication();

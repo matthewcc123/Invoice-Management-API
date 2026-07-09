@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace InvoiceManagement.Api.DTOs
 {
-    public class AuthUpdatePasswordRequest
+    public class AuthChangePasswordRequest
     {
         [Required]
         [MinLength(6, ErrorMessage = "Password must be a least 6 characters long.")]
