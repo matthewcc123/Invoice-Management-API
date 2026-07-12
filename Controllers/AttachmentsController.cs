@@ -10,7 +10,6 @@ using System.Security.Claims;
 namespace InvoiceManagement.Api.Controllers
 {
     [ApiController]
-    [EndpointDescription("")]
     [Route("api/[controller]")]
     public class AttachmentsController : ControllerBase
     {
