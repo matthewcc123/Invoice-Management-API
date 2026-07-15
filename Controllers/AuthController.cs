@@ -5,9 +5,12 @@ using InvoiceManagement.Api.DTOs;
 using InvoiceManagement.Api.Models;
 using InvoiceManagement.Api.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Numerics;
+using System.Security.Claims;
 
 namespace InvoiceManagement.Api.Controllers
 {
@@ -83,6 +86,16 @@ namespace InvoiceManagement.Api.Controllers
                 });
             }
 
+            //Generate Token
+            var jwt = _jwtService.GenerateToken(user);
+
+            Response.Cookies.Append("token", jwt.Token, new CookieOptions
+            {
+                HttpOnly = false,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = jwt.ExpiresAt,
+            });
 
             return Ok(new ApiResponse<AuthLoginResponse>
             {
@@ -90,8 +103,7 @@ namespace InvoiceManagement.Api.Controllers
                 Message = "Login successful.",
                 Data = new AuthLoginResponse
                 {
-                    //Generate Token
-                    Token = _jwtService.GenerateToken(user),
+                    Token = jwt.Token,
                 }
             });
         }
@@ -100,6 +112,8 @@ namespace InvoiceManagement.Api.Controllers
         [Authorize]
         public IActionResult Logout()
         {
+            Response.Cookies.Delete("token");
+
             return Ok(new ApiResponse
             {
                 Success = true,
@@ -157,14 +171,24 @@ namespace InvoiceManagement.Api.Controllers
                 }
             }
 
+            //Generate Token
+            var jwt = _jwtService.GenerateToken(user);
+
+            Response.Cookies.Append("token", jwt.Token, new CookieOptions
+            {
+                HttpOnly = false,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = jwt.ExpiresAt,
+            });
+
             return Ok(new ApiResponse<AuthLoginResponse>
             {
                 Success = true,
-                Message = "Password updated successfully.",
+                Message = "Login successful.",
                 Data = new AuthLoginResponse
                 {
-                    //Generate Token
-                    Token = _jwtService.GenerateToken(user),
+                    Token = jwt.Token,
                 }
             });
 
@@ -215,6 +239,31 @@ namespace InvoiceManagement.Api.Controllers
                 Success = true,
                 Message = $"Role updated successfully.",
                 Data = userResponse
+            });
+        }
+
+        [HttpGet("me")]
+        [Authorize]
+        public async Task<IActionResult> Me()
+        {
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = $"User id {userId} not found."
+                });
+            }
+
+            var userResponse = _mapper.Map<UserResponse>(user);
+
+            return Ok(new
+            {
+                success = true,
+                data = userResponse,
             });
         }
 

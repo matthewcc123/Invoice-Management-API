@@ -1,4 +1,5 @@
-﻿using InvoiceManagement.Api.Models;
+﻿using InvoiceManagement.Api.DTOs;
+using InvoiceManagement.Api.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -17,7 +18,7 @@ namespace InvoiceManagement.Api.Services
             _configuration = configuration;
         }
 
-        public string GenerateToken(User user)
+        public TokenResult GenerateToken(User user)
         {
 
             var claims = new[]
@@ -33,16 +34,18 @@ namespace InvoiceManagement.Api.Services
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             int expireMinute = int.Parse(_configuration.GetSection("Jwt:ExpireMinutes").Value!);
+            DateTime expireDateTime = DateTime.UtcNow.AddMinutes(expireMinute);
 
             var token = new JwtSecurityToken(
                 issuer: _configuration.GetSection("Jwt:Issuer").Value,
                 audience: _configuration.GetSection("Jwt:Audience").Value,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(expireMinute),
+                expires: expireDateTime,
                 signingCredentials: credentials
                 );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return new TokenResult{ Token = new JwtSecurityTokenHandler().WriteToken(token), ExpiresAt = expireDateTime};
+
         }
 
     }

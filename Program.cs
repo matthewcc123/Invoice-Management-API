@@ -118,6 +118,24 @@ builder.Services.AddHttpLogging(options =>
 //Auth
 builder.Services.AddAuthorization();
 
+//Enable Cors
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigins", policy =>
+    {
+        policy.WithOrigins("https://example.com").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+    });
+
+    options.AddPolicy("AllowReact", policy =>
+    {
+        policy.WithOrigins(builder.Configuration.GetSection("CORS:ReactAllowedOrigin").Value!)
+               .AllowAnyMethod()
+               .AllowAnyHeader()
+               .AllowCredentials();
+    });
+
+});
+
 //Service
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<SeedService>();
@@ -144,6 +162,8 @@ using (var scope = app.Services.CreateScope())
 //Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    //Allow CORS from any origin
+    app.UseCors("AllowReact");
     app.MapOpenApi();
 
     //Scalar
@@ -164,6 +184,11 @@ if (app.Environment.IsDevelopment())
 
 
     });
+}
+else
+{
+    //Allow CORS on specific Origin
+    app.UseCors("AllowSpecificOrigins");
 }
 
 app.UseHttpsRedirection();
